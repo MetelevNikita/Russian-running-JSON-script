@@ -1,0 +1,39 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "my-app": "app/appdist/index.js"
+  },
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node18 --outfile=dist/index.js --minify --sourcemap --tree-shaking --external:inquirer",
+    "prod": "pkg dist/index.js --targets node16-macos-x64,node16-win-x64 --output app/my-app --assets 'dist/fonts/**/*'"
+  },
+  "pkg": {
+    "scripts": "dist/index.js",
+    "assets": ["app/app/dist/fonts/**/*"]
+
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/figlet": "^1.7.0",
+    "@types/node": "^24.3.0",
+    "esbuild": "^0.25.9",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "chalk": "^5.6.0",
+    "figlet": "^1.8.2",
+    "inquirer": "^8.2.7",
+    "node-fetch": "^3.3.2"
+  }
+}
