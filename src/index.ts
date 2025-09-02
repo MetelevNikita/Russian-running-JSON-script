@@ -84,7 +84,7 @@ const getEvetData = async (eventCode: string) => {
 }
 
 
-const getStaticticRace = async (eventId: string, raceId: string) => {
+const getStaticticRace = async (eventId: string, raceId: string, gender: string) => {
   try {
 
     const responce = await fetch(`https://results.russiarunning.com/api/results/individual/get`, {
@@ -96,8 +96,10 @@ const getStaticticRace = async (eventId: string, raceId: string) => {
       body: JSON.stringify({
         eventId: eventId,
         raceId: raceId,
-        page: { skip: 0, take: 25 },
-        filter: {},
+        page: { skip: 0, take: 100 },
+        filter: {
+            genderNominationName: gender
+        },
         isStagesOn: true,
         language: 'ru'
       })
@@ -253,8 +255,9 @@ const init = async () => {
     }
 
 
-    await fs.promises.writeFile(pathToFolder + `/event_statistic.json`, JSON.stringify(dataStatistic, null, 2))
+    await fs.promises.writeFile(pathToFolder + `/event_statistic.json`, JSON.stringify([dataStatistic], null, 2))
     console.log(chalk.green(`Файл с данными статистики по мероприятию создан ${new Date().getTime().toLocaleString()}`))
+
 
 
     const choiceDistance = event[1].map((item: any) => item.name) as string[]
@@ -280,12 +283,52 @@ const init = async () => {
 
 
 
-    await fs.promises.writeFile(pathToFolder + `/event.json`, JSON.stringify(event[0], null, 2))
+    await fs.promises.writeFile(pathToFolder + `/event.json`, JSON.stringify([event[0]], null, 2))
     console.log(chalk.green(`Файл с данными по мероприятию создан ${new Date().getTime().toLocaleString()}`))
 
 
+
+
+    const getRaceStatisticData = async () => {
+      try {
+        
+        const data = await getStatisticEvent(eventCode) as any
+
+        const raceStatistic = data.raceStatistics.map((item: any) => {
+          return {
+            raceName: item.name,
+            femalesAvgPace: item.femalesAvgPace,
+            femalesAvgSpeed: item.femalesAvgSpeed,
+            femalesAvgTimeResult: item.femalesAvgTimeResult,
+            malesAvgPace: item.malesAvgPace,
+            malesAvgSpeed: item.malesAvgSpeed,
+            malesAvgTimeResult: item.malesAvgTimeResult,
+          }
+        })
+
+
+        await fs.promises.writeFile(pathToFolder + `/distance_statistic.json`, JSON.stringify(raceStatistic, null, 2))
+        console.log(chalk.green(`Файл с данными статистики по дистанциям создан ${new Date().getTime().toLocaleString()}`))
+
+      } catch (error) {
+        console.error(error)
+        
+      }
+    }
+
+
+    await getRaceStatisticData()
+    console.log(chalk.green(`Файл с данными по дистанциям создан ${new Date().getTime().toLocaleString()}`))
+
+    setTimeout(async () => {
+      getRaceStatisticData()
+      console.log(chalk.green(`Данные по статистике дистанций обновлены ${new Date().getTime().toLocaleString()}`))
+    })
+
+
+
     const getStatisticData = async () => {
-      const getStatistic = await getStaticticRace(event[0].id as string, selectedDistance.id as string) as any;
+      const getStatistic = await getStaticticRace(event[0].id as string, selectedDistance.id as string, gender as string) as any;
 
       const individualStatistic = getStatistic.results.filter((item: any) => item.genderNominationName === gender)
         .map((item: any) => ({
@@ -298,7 +341,7 @@ const init = async () => {
         }));
 
       // Сохраняем статистику в файл
-      await fs.promises.writeFile(pathToFolder + `/statistic_${gender}.json`, JSON.stringify(individualStatistic, null, 2));
+      await fs.promises.writeFile(pathToFolder + `/statistic_${gender}_${distance}.json`, JSON.stringify(individualStatistic, null, 2));
     }
 
 
@@ -309,7 +352,7 @@ const init = async () => {
 
     setInterval(async () => {
       getStatisticData()
-      console.log(chalk.green(`Данные обновлкены ${new Date().toLocaleString()}`))
+      console.log(chalk.green(`Данные по индивидуальному зачету обновлены ${new Date().toLocaleString()}`))
     }, 20000);
 
 
